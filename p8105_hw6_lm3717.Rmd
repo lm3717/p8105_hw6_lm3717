@@ -174,7 +174,7 @@ The widths of the confidence intervals vary considerably across cities, reflecti
 
 ## Problem 2: Central Park Weather
 
-Clean
+Clean the Dataset
 
 ```{r}
 weather_clean_df = 
@@ -182,6 +182,8 @@ weather_clean_df =
   select(tmax, tmin, prcp) |> 
   drop_na()
 ```
+
+After excluding observations with missing values in maximum temperature, minimum temperature, or precipitation, `r nrow(weather_clean_df)` observations remain for analysis.
 
 #### Fit the Regression Model
 
@@ -255,13 +257,15 @@ bootstrap_ratio_df =
   select(.id, beta_ratio)
 ```
 
+Combine the Estimates
+
 ```{r}
 bootstrap_results_df = 
   bootstrap_r2_df |> 
   left_join(bootstrap_ratio_df, by = ".id")
 ```
 
-#### Plotting the bootstrap distributions
+#### Plotting the Bootstrap Distributions
 
 ```{r, fig.width=10, fig.height=5}
 bootstrap_results_df |> 
@@ -305,7 +309,7 @@ The bootstrap distribution of $r^2$ is approximately bell-shaped with slight lef
 
 In contrast, the bootstrap distribution of $\hat{\beta}_1 / \hat{\beta}_2$ is noticeably left-skewed, with a longer tail toward more negative values. The distribution has a mean of `r round(mean(bootstrap_results_df$beta_ratio), 2)` and a standard deviation of `r round(sd(bootstrap_results_df$beta_ratio), 2)`. This asymmetry supports the use of bootstrap percentile confidence intervals rather than relying on a normal approximation.
 
-#### Confidenece Intervals
+#### Confidence Intervals
 
 ```{r}
 bootstrap_ci_df = 
@@ -336,7 +340,7 @@ bootstrap_ci_df |>
     col.names = c(
       "Quantity", "Lower 95% CI", "Upper 95% CI"
     ),
-    caption = "95% percentile confidence intervals based on 5,000 bootstrap samples"
+    caption = "**Table 3:** 95% percentile confidence intervals based on 5,000 bootstrap samples"
   )
 ```
 
@@ -386,11 +390,6 @@ birthweight_missing_df =
     names_to = "variable",
     values_to = "missing"
   )
-#birthweight_missing_df |> 
-  #summarize(
-    #total_missing = sum(missing),
-    #variables_with_missing = sum(missing > 0)
-  #) missing values zero
 ```
 
 The cleaned birth weight dataset contains `r nrow(birthweight_df)` observations and `r ncol(birthweight_df)` variables. The categorical variables for infant sex, maternal race, paternal race, and malformation status were converted to factors with appropriate labels. A missing data assessment identified `r sum(birthweight_missing_df$missing)` missing values across all variables; therefore, no observations needed to be excluded from the regression analysis.
@@ -421,7 +420,7 @@ birthweight_residuals_df =
 
 #### Plot For My Proposed Model
 
-```{r}
+```{r, message = FALSE}
 birthweight_residuals_df |> 
   ggplot(aes(x = pred, y = resid)) +
   geom_point(
@@ -610,5 +609,5 @@ cv_summary_df |>
 
 Across 100 Monte Carlo cross-validation splits, the proposed model had the lowest mean RMSE of `r round(cv_summary_df |> filter(model == "Proposed Model") |> pull(mean_rmse), 2)` grams, followed by the interaction model at `r round(cv_summary_df |> filter(model == "Interaction Model") |> pull(mean_rmse), 2)` grams and the length and gestational age model at `r round(cv_summary_df |> filter(model == "Length + Gestational Age") |> pull(mean_rmse), 2)` grams.
 
-The proposed model also exhibited the lowest variability in prediction error across testing datasets. Although the proposed and interaction models have overlapping RMSE distributions, the proposed model achieved better average predictive performance. The length and gestational age model performed noticeably worse than both alternatives. These results suggest that incorporating maternal characteristics and prenatal factors alongside infant measurements may improve birth weight prediction. Despite the limitations identified in the residual analysis, the proposed model is preferred among the three models considered based on its cross-validated prediction performance.
+The proposed model also exhibited the lowest variability in prediction error across testing datasets. Although the proposed and interaction models have overlapping RMSE distributions, the proposed model achieved better average predictive performance. The length and gestational age model performed noticeably worse than both alternatives. These results suggest that the proposed combination of infant measurements, maternal characteristics, and prenatal factors provides better predictive performance than the two alternative model specifications. Despite the limitations identified in the residual analysis, the proposed model is preferred among the three models considered based on its cross-validated prediction performance.
 
