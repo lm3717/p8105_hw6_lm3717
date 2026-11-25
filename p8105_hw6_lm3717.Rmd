@@ -32,7 +32,7 @@ set.seed(1)
 
 Import and clean 
 
-```{r}
+```{r, message= FALSE}
 homicide_df = 
   read_csv("data/homicide-data.csv", 
            na = c("", "NA", "Unknown")) |> 
@@ -118,8 +118,7 @@ city_results_df =
   select(city_state, estimate, conf.low, conf.high)
 ```
 
-Plotting 
-
+#### Plot for all Cities
 
 ```{r city_or_plot, fig.width=11, fig.height=12, out.width="100%"}
 city_results_df |> 
