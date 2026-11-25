@@ -1,5 +1,5 @@
 ---
-title: "Homework 6"
+title: "P8105 Homework 6"
 author: "Lina Marcinczyk"
 date: "2026-11-25"
 output: github_document
@@ -8,6 +8,8 @@ output: github_document
 ```{r, include = FALSE}
 library(tidyverse)
 library(broom)
+library(p8105.datasets)
+data("weather_df")
 
 knitr::opts_chunk$set(
   fig.width = 6,
@@ -170,9 +172,54 @@ For `r sum(city_results_df$conf.high < 1)` cities, the 95% confidence interval l
 
 The widths of the confidence intervals vary considerably across cities, reflecting differences in the precision of the estimated odds ratios.
 
+## Problem 2: Central Park Weather
 
+Clean
 
+```{r}
+weather_clean_df = 
+  weather_df |> 
+  select(tmax, tmin, prcp) |> 
+  drop_na()
+```
 
+#### Fit the Regression Model
+
+```{r}
+weather_lm = 
+  lm(tmax ~ tmin + prcp, data = weather_clean_df)
+
+weather_lm |> 
+  broom::tidy() |> 
+  knitr::kable(
+    digits = 4,
+    caption = "Linear regression estimates for maximum daily temperature"
+  )
+```
+
+#### Bootstrapping 5000 samples
+
+```{r}
+weather_bootstrap_df = 
+  weather_clean_df |> 
+  modelr::bootstrap(n = 5000) |> 
+  mutate(
+    models = map(
+      strap,
+      \(df) lm(tmax ~ tmin + prcp, data = df)
+    ),
+    glance_results = map(models, broom::glance),
+    tidy_results = map(models, broom::tidy)
+  )
+```
+
+```{r}
+bootstrap_r2_df = 
+  weather_bootstrap_df |> 
+  select(.id, glance_results) |> 
+  unnest(glance_results) |> 
+  select(.id, r.squared)
+```
 
 
 
